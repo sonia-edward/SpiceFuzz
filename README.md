@@ -25,7 +25,7 @@ The raw data is stored in the "data/raw_data" folder. Before starting SpiceFuzz,
 ```
 python data_preparation.py --raw_data_path ./data/raw_data/ngspice (regression) test circuits
 ```
-Similar parameters can be configured through commands or directly modified at the beginning of the code. At the same time, you can also obtain the latest snapshot from the official website of [Ngspice](https://sourceforge.net/p/ngspice/ngspice/ci/master/tree/tests/) and [LTspice](https://www.analog.com/cn/resources/design-tools-and-calculators/ltspice-simulator/lt-spice-demo-circuits.html) and follow the steps above.
+Similar parameters can be configured through command above or directly modified at the beginning of the code. At the same time, you can also obtain the latest snapshot from the official website of [Ngspice](https://sourceforge.net/p/ngspice/ngspice/ci/master/tree/tests/) and [LTspice](https://www.analog.com/cn/resources/design-tools-and-calculators/ltspice-simulator/lt-spice-demo-circuits.html) and follow the steps above.
 
 ## 4. Usage
 
@@ -33,7 +33,7 @@ After obtaining the available netlist files through the previous step, you can t
 ```
 python main.py --seed_dir ./data/seed_netlist/ngspice (regression) test circuits
 ```
-Similar parameters can be configured through commands or directly modified at the beginning of the code. Finally, the results classified by symptoms can be viewed in the "result" folder.
+Similar parameters can be configured through command above or directly modified at the beginning of the code. Finally, the results classified by symptoms can be viewed in the "result" folder.
 
 ## Citation
 
