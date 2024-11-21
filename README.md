@@ -8,12 +8,12 @@ The code and dataset for the paper "SpiceFuzz: LLM-Based Fuzzing for SPICE Circu
 	- `data/seed_netlist/ : seed netlist processed by data_preparation.py`
 - `result/ : `
 - `scripts/`
-	- `mutations.py : circuits`
-	- `reinforcement_learning.py : circuits`
-	- `differential_testing.py : circuits`
-	- `extract_error.py : circuits`
-- `data_preparation.py : dataset reader for BR-Hunter`
-- `main_ngspice.py : a file for model training`
+	- `mutations.py : get mutation rules and syntax forms`
+	- `reinforcement_learning.py : A2C algorithm`
+	- `differential_testing.py : differential testing`
+	- `extract_error.py : extract error info from log file`
+- `data_preparation.py : extract netlist files from raw data `
+- `main.py : a file for start`
 
 ## 2. Environment Setup
 
