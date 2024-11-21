@@ -5,13 +5,13 @@ The code and dataset for the paper "SpiceFuzz: LLM-Based Fuzzing for SPICE Circu
 ## 1. Project Structure
 - `data/`
 	- `data/raw_data/ : circuits obtained from the official website of the SPICE simulator`
-	- `data/seed_netlist/ : seed netlist processed by data_preparation.py`
+	- `data/seed_netlist/ : seed netlists processed by data_preparation.py`
 - `result/ : results after testing `
 - `scripts/`
 	- `mutations.py : get mutation rules and syntax forms`
 	- `reinforcement_learning.py : A2C algorithm`
 	- `differential_testing.py : differential testing`
-	- `extract_error.py : extract error info from log file`
+	- `extract_error.py : extract error information from log file`
 - `data_preparation.py : extract netlist files from raw data `
 - `main.py : a file for start`
 
