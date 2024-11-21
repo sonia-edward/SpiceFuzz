@@ -6,7 +6,7 @@ The code and dataset for the paper "SpiceFuzz: LLM-Based Fuzzing for SPICE Circu
 - `data/`
 	- `data/raw_data/ : circuits obtained from the official website of the SPICE simulator`
 	- `data/seed_netlist/ : seed netlist processed by data_preparation.py`
-- `result/ : `
+- `result/ : results after testing `
 - `scripts/`
 	- `mutations.py : get mutation rules and syntax forms`
 	- `reinforcement_learning.py : A2C algorithm`
@@ -17,20 +17,23 @@ The code and dataset for the paper "SpiceFuzz: LLM-Based Fuzzing for SPICE Circu
 
 ## 2. Environment Setup
 
-The code is tested with Python 3.10. All dependencies are listed in [requirements.txt](requirements.txt).
+The code is tested with Python 3.10. All dependencies are listed in [requirements.txt](requirements.txt). And please ensure that the Ngspice or LTspice path is configured in the environment variable.
 
 ## 3. Data preparation
-The data is stored in the "data" folder. The training dataset should be named in the format of project name + "_train.json" and put it in the folder `data/train/`. 
-The testing dataset should be named in the format of project name + "_test.json" and put it in the folder `data/test/`.
 
+The raw data is stored in the "data/raw_data" folder. Before starting SpiceFuzz, the compressed files should be extracted to the corresponding folder. Then start the data preparation code using the following command:
+```
+python data_preparation.py --raw_data_path ./data/raw_data/ngspice (regression) test circuits
+```
+Similar parameters can be configured through commands or directly modified at the beginning of the code. At the same time, you can also obtain the latest snapshot from the official website of [Ngspice](https://sourceforge.net/p/ngspice/ngspice/ci/master/tree/tests/) and [LTspice](https://www.analog.com/cn/resources/design-tools-and-calculators/ltspice-simulator/lt-spice-demo-circuits.html) and follow the steps above.
 
 ## 4. Usage
-When your dataset is ready in the previous step, you can go to the "train.py" to modify the name of the "project", and you can modify config parameters through "Config" class. Finally, start the code by command.
 
-
+After obtaining the available netlist files through the previous step, you can then start SpiceFuzz using the following command：
 ```
-python train.py
+python main.py --seed_dir ./data/seed_netlist/ngspice (regression) test circuits
 ```
+Similar parameters can be configured through commands or directly modified at the beginning of the code. Finally, the results classified by symptoms can be viewed in the "result" folder.
 
 ## Citation
 
