@@ -6,7 +6,6 @@ import random
 import shutil
 import argparse
 import Levenshtein
-import subprocess
 from scripts.mutations import *
 from scripts.reinforcement_learning import *
 from scripts.differential_testing_ltspice import differential_testing
@@ -34,44 +33,44 @@ if __name__ == '__main__':
         seed_names.append(filename)
         shutil.copy(os.path.join(args.seed_dir, filename), os.path.join(workdir, filename))
     # calculate seed netlist weight
-    # seed_weights = [0]
-    # for i in range(1, len(seed_names)):
-    #     weight_sum = 0
-    #     for j in range(0, i):
-    #         with open(os.path.join(workdir, seed_names[i]), 'r') as f:
-    #             str1 = f.read()
-    #         f.close()
-    #         with open(os.path.join(workdir, seed_names[j]), 'r') as f:
-    #             str2 = f.read()
-    #         f.close()
-    #         weight = Levenshtein.distance(str1, str2)
-    #         weight_sum += weight
-    #         seed_weights[j] = (seed_weights[j] * (i - 1) + weight) / i
-    #     seed_weights.append(weight_sum / i)
-    # print(seed_weights)
+    seed_weights = [0]
+    for i in range(1, len(seed_names)):
+        weight_sum = 0
+        for j in range(0, i):
+            with open(os.path.join(workdir, seed_names[i]), 'r') as f:
+                str1 = f.read()
+            f.close()
+            with open(os.path.join(workdir, seed_names[j]), 'r') as f:
+                str2 = f.read()
+            f.close()
+            weight = Levenshtein.distance(str1, str2)
+            weight_sum += weight
+            seed_weights[j] = (seed_weights[j] * (i - 1) + weight) / i
+        seed_weights.append(weight_sum / i)
+    print(seed_weights)
     # initialize mutation rules and forms
     mutations = initialize_mutations()
     forms = initialize_forms()
     # initialize RL
-    # s_dim = len(mutations)
-    # a_dim = len(mutations)
-    # net = Net(s_dim, a_dim)
-    # optim = torch.optim.Adam(net.parameters(), lr=args.lr)
-    # init_stat = np.ones(len(mutations))
-    # weight_sum = 0
-    # for i in range(len(seed_weights)):
-    #     weight_sum += seed_weights[i]
-    # pre_instant_score = weight_sum / len(seed_weights)
-    # history_score = []
-    # for i in range(len(mutations)):
-    #     history_score.append([0, 0])
-    # # [a, b] a:times the mutation is selected, b: the mutation score
-    # buffer_s = []
-    # buffer_a = []
-    # buffer_r = []
+    s_dim = len(mutations)
+    a_dim = len(mutations)
+    net = Net(s_dim, a_dim)
+    optim = torch.optim.Adam(net.parameters(), lr=args.lr)
+    init_stat = np.ones(len(mutations))
+    weight_sum = 0
+    for i in range(len(seed_weights)):
+        weight_sum += seed_weights[i]
+    pre_instant_score = weight_sum / len(seed_weights)
+    history_score = []
+    for i in range(len(mutations)):
+        history_score.append([0, 0])
+    # [a, b] a:times the mutation is selected, b: the mutation score
+    buffer_s = []
+    buffer_a = []
+    buffer_r = []
     # initialize LLM
-    base_url = "https://xiaoai.plus/v1"
-    api_key = "sk-wR0vpikQkO4DQuSU9BsSso5aZwNcSMmYqZfpZgMg3Ms8ruY1"
+    base_url = "********"
+    api_key = "*********"
     client = openai.OpenAI(base_url=base_url, api_key=api_key)
     error_msg = ""
     # count
@@ -92,12 +91,10 @@ if __name__ == '__main__':
         print("---------------------")
         seed_name = random.choice(seed_names)
         print("Selected seed netlist:\n" + seed_name)
-        # optim.zero_grad()
-        mutation = random.choice(mutations)
-        mutation_no = mutations.index(mutation)
-        # mutation_no = net.choose_action(v_wrap(init_stat[None, :]))
-        # mutation_no = mutation_no.numpy()[0]
-        # mutation = mutations[mutation_no]
+        optim.zero_grad()
+        mutation_no = net.choose_action(v_wrap(init_stat[None, :]))
+        mutation_no = mutation_no.numpy()[0]
+        mutation = mutations[mutation_no]
         print("Selected mutation:\n" + mutation)
         with open(os.path.join(workdir, seed_name), 'r') as f:
             seed_lines = f.readlines()
@@ -138,7 +135,7 @@ if __name__ == '__main__':
         except openai.PermissionDeniedError as e:
             continue
         except Exception as e:
-            continue
+            print("Exception")
         reply = chat_completion.choices[0].message.content
         print("LLM reply:\n" + reply)
         pattern = r"\`\`\`([\s\S]*?)\`\`\`"
@@ -182,7 +179,7 @@ if __name__ == '__main__':
         time_2 = time.time()
         llm_time += time_2 - time_1
         total_num += 1
-        # buffer_a.append(mutation_no)
+        buffer_a.append(mutation_no)
         code1, code2, code3 = differential_testing(variant_path, variant_name, args.maxtime, args.error)
         time_3 = time.time()
         compare_time += time_3 - time_2
@@ -213,60 +210,51 @@ if __name__ == '__main__':
             error_num += 1
         if not os.path.exists(new_path):
             os.makedirs(new_path)
-        try:
-            shutil.move(old_path, new_path)
-        except Exception as e:
-            print("Exception")
-        # cmd = "TASKKILL /F /IM Ltspice.exe /T"
-        # subprocess.run(cmd, shell=True)
-        # shutil.move(old_path, new_path)
-        try:
-            shutil.copy(os.path.join(workdir, seed_name), os.path.join(new_path, seed_name))
-        except Exception as e:
-            print("Exception")
+        shutil.move(old_path, new_path)
+        shutil.copy(os.path.join(workdir, seed_name), os.path.join(new_path, seed_name))
         if code1 == 0 or code2 == 0:
             success_num += 1
         # Add to seed netlist pool
         if code1 == 0 and code2 == 0:
             seed_names.append(variant_name)
-            # init_stat[mutation_no] += 1
-            # weight_sum = 0
-            # for j in range(0, len(seed_weights)):
-            #     with open(variant_path, 'r') as f:
-            #         str1 = f.read()
-            #     f.close()
-            #     with open(os.path.join(workdir, seed_names[j]), 'r') as f:
-            #         str2 = f.read()
-            #     f.close()
-            #     weight = Levenshtein.distance(str1, str2)
-            #     weight_sum += weight
-            #     seed_weights[j] = (seed_weights[j] * (len(seed_weights) - 1) + weight) / len(seed_weights)
-            # seed_weights.append(weight_sum / len(seed_weights))
-            # weight_sum = 0
-            # for i in range(len(seed_weights)):
-            #     weight_sum += seed_weights[i]
-            # instantScore = weight_sum / len(seed_weights)
-            # instantReward = instantScore - pre_instant_score
+            init_stat[mutation_no] += 1
+            weight_sum = 0
+            for j in range(0, len(seed_weights)):
+                with open(variant_path, 'r') as f:
+                    str1 = f.read()
+                f.close()
+                with open(os.path.join(workdir, seed_names[j]), 'r') as f:
+                    str2 = f.read()
+                f.close()
+                weight = Levenshtein.distance(str1, str2)
+                weight_sum += weight
+                seed_weights[j] = (seed_weights[j] * (len(seed_weights) - 1) + weight) / len(seed_weights)
+            seed_weights.append(weight_sum / len(seed_weights))
+            weight_sum = 0
+            for i in range(len(seed_weights)):
+                weight_sum += seed_weights[i]
+            instantScore = weight_sum / len(seed_weights)
+            instantReward = instantScore - pre_instant_score
         else:
-            # instantReward = 0
+            instantReward = 0
             os.remove(variant_path)
-        # history_score[mutation_no][1] = (instantReward + history_score[mutation_no][1] * history_score[mutation_no][
-        #     0]) / (history_score[mutation_no][0] + 1)
-        # history_score[mutation_no][0] += 1
-        # buffer_r.append(history_score[mutation_no][1])
-        # buffer_s.append(init_stat)
-        # v_s_ = net((v_wrap(init_stat[None, :])))[-1].data.numpy()[0, 0]
-        # buffer_v_target = []
-        # for r in buffer_r[::-1]:  # reverse buffer r
-        #     v_s_ = r + 0.9 * v_s_
-        #     buffer_v_target.append(v_s_)
-        # buffer_v_target.reverse()
-        # loss = net.loss_func(
-        #     v_wrap(np.vstack(buffer_s)),
-        #     v_wrap(np.array(buffer_a)),
-        #     v_wrap(np.array(buffer_v_target)[:, None]))
-        # loss.backward()
-        # optim.step()
+        history_score[mutation_no][1] = (instantReward + history_score[mutation_no][1] * history_score[mutation_no][
+            0]) / (history_score[mutation_no][0] + 1)
+        history_score[mutation_no][0] += 1
+        buffer_r.append(history_score[mutation_no][1])
+        buffer_s.append(init_stat)
+        v_s_ = net((v_wrap(init_stat[None, :])))[-1].data.numpy()[0, 0]
+        buffer_v_target = []
+        for r in buffer_r[::-1]:  # reverse buffer r
+            v_s_ = r + 0.9 * v_s_
+            buffer_v_target.append(v_s_)
+        buffer_v_target.reverse()
+        loss = net.loss_func(
+            v_wrap(np.vstack(buffer_s)),
+            v_wrap(np.array(buffer_a)),
+            v_wrap(np.array(buffer_v_target)[:, None]))
+        loss.backward()
+        optim.step()
         end_time = time.time()
         gap_time = end_time - start_time
     shutil.rmtree(workdir)
