@@ -36,9 +36,9 @@ python train.py
 
 If you find the code useful, please cite our paper.
 ```
-
+********
 ```
 
 ## Contact
 
-For any questions, please drop an email to Shikai Guo.
+For any questions, please drop an email to ********.
